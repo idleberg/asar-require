@@ -1,5 +1,5 @@
 {
-  "main": "./lib/require.js",
+  "main": "./lib/require.cjs",
   "name": "asar-require",
   "description": "Enable 'require' asar packages",
   "version": "0.3.0",
@@ -18,16 +18,15 @@
     "url": "https://github.com/electron/asar-require/issues"
   },
   "scripts": {
-    "prepublish": "grunt prepublish"
+    "build": "tsdown",
+    "prepublish": "npm run build"
   },
   "dependencies": {
-    "asar": "0.12.1"
+    "@electron/asar": "^4.2.0"
   },
   "devDependencies": {
-    "grunt": "~0.4.1",
-    "grunt-contrib-coffee": "~0.12.0",
-    "grunt-cli": "~0.1.8",
-    "grunt-coffeelint": "0.0.6",
-    "coffee-script": "^1.8.0"
+    "@types/node": "^20.19.43",
+    "tsdown": "^0.22.2",
+    "typescript": "^6.0.3"
   }
 }

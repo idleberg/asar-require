@@ -1,14 +1,11 @@
 import * as asar from "@electron/asar";
-import * as fs from "node:fs";
-import * as path from "node:path";
+import type { PathLike, PathOrFileDescriptor } from "node:fs";
+import node_module from "node:module";
 
-let node_module: typeof import("node:module") | null;
-
-try {
-  node_module = require("node:module");
-} catch {
-  node_module = null;
-}
+// Use require() for Node builtins we monkey-patch: rolldown treats ESM
+// import bindings as immutable and would reject the property assignments below.
+const fs = require("node:fs");
+const path = require("node:path");
 
 type SplitResult = [false] | [true, string, string];
 
@@ -63,7 +60,7 @@ function asarStatsToFsStats(stats: ReturnType<typeof asar.statFile>) {
 
 const readFileSync = fs.readFileSync;
 (fs as any).readFileSync = function (
-  p: fs.PathOrFileDescriptor,
+  p: PathOrFileDescriptor,
   options?: { encoding?: BufferEncoding | null; flag?: string } | BufferEncoding | null,
 ) {
   const [isAsar, asarPath, filePath] = splitPath(p);
@@ -94,17 +91,18 @@ const readFileSync = fs.readFileSync;
 };
 
 const statSync = fs.statSync;
-(fs as any).statSync = function (p: fs.PathLike) {
+(fs as any).statSync = function (p: PathLike) {
   const [isAsar, asarPath, filePath] = splitPath(p);
 
   if (!isAsar) {
     return statSync.apply(this, arguments as any);
   }
+
   return asarStatsToFsStats(asar.statFile(asarPath, filePath));
 };
 
 const realpathSync = fs.realpathSync;
-(fs as any).realpathSync = function (p: fs.PathLike) {
+(fs as any).realpathSync = function (p: PathLike) {
   const [isAsar, asarPath, filePath] = splitPath(p);
 
   if (!isAsar) {
@@ -117,16 +115,14 @@ const realpathSync = fs.realpathSync;
   return path.join(realpathSync(asarPath) as string, resolved);
 };
 
-if (node_module && (node_module as any)._findPath) {
-  const module_findPath = (node_module as any)._findPath;
+const module_findPath = (node_module as any)._findPath;
 
-  (node_module as any)._findPath = function (request: string, _paths: string[], _isMain: boolean) {
-    const [isAsar] = splitPath(request);
+(node_module as any)._findPath = function (request: string, _paths: string[], _isMain: boolean) {
+  const [isAsar] = splitPath(request);
 
-    if (!isAsar) {
-      return module_findPath.apply(this, arguments);
-    }
+  if (!isAsar) {
+    return module_findPath.apply(this, arguments);
+  }
 
-    return request;
-  };
-}
+  return request;
+};

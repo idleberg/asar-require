@@ -134,11 +134,29 @@ const realpathSync = fs.realpathSync;
 const module_findPath = (node_module as any)._findPath;
 
 (node_module as any)._findPath = function (request: string, _paths: string[], _isMain: boolean) {
-  const [isAsar] = splitPath(request);
+  const [isAsar, asarPath, filePath] = splitPath(request);
 
   if (!isAsar) {
     return module_findPath.apply(this, arguments);
   }
 
-  return request;
+  const exts = Object.keys((node_module as any)._extensions);
+  const candidates = [filePath];
+  for (const ext of exts) {
+    candidates.push(filePath + ext);
+  }
+  for (const ext of exts) {
+    candidates.push(path.join(filePath, "index" + ext));
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const stat = asar.statFile(asarPath, candidate);
+      if (!("files" in stat)) {
+        return path.join(asarPath, candidate);
+      }
+    } catch {}
+  }
+
+  return false;
 };

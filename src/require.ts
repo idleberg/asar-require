@@ -101,6 +101,22 @@ const statSync = fs.statSync;
   return asarStatsToFsStats(asar.statFile(asarPath, filePath));
 };
 
+const existsSync = fs.existsSync;
+(fs as any).existsSync = function (p: PathLike) {
+  const [isAsar, asarPath, filePath] = splitPath(p);
+
+  if (!isAsar) {
+    return existsSync.apply(this, arguments as any);
+  }
+
+  try {
+    asar.statFile(asarPath, filePath);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const realpathSync = fs.realpathSync;
 (fs as any).realpathSync = function (p: PathLike) {
   const [isAsar, asarPath, filePath] = splitPath(p);

@@ -2,7 +2,7 @@
 
 > [!NOTE]
 >
-> This package is a fork of the abandoned [`asar-require`](#) with notable changes:
+> This package is a fork of the abandoned [`asar-require`](https://github.com/electron/asar-require) with notable changes:
 > - ported to Typescript
 > - replaced vulnerable `asar` package with `@electron/asar`
 
@@ -14,5 +14,3 @@ Enable `require` to read scripts in [asar] packages.
 require('asar-require');
 require('/path/to/archive.asar/script');
 ```
-
-[asar]: https://github.com/electron/asar
